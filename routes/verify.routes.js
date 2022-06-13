@@ -4,17 +4,33 @@ const router = require('express').Router();
 const { MerkleTree } = require('merkletreejs');
 const keccak256 = require('keccak256');
 
-const whiteListLeafNodes = require('../db/hashes.json');
-const whitelistMerkleTree = new MerkleTree(whiteListLeafNodes, keccak256, {
+const whiteList1LeafNodes = require('../db/hashesWL1.json');
+const whitelist1MerkleTree = new MerkleTree(whiteList1LeafNodes, keccak256, {
+  sortPairs: true,
+});
+const whiteList2LeafNodes = require('../db/hashesWL2.json');
+const whitelist2MerkleTree = new MerkleTree(whiteList2LeafNodes, keccak256, {
+  sortPairs: true,
+});
+const waitListLeafNodes = require('../db/hashesWaitList.json');
+const waitlistMerkleTree = new MerkleTree(waitListLeafNodes, keccak256, {
   sortPairs: true,
 });
 
 router.get('/merkle', (req, res) => {
   const { address } = req.query;
-
+  let merkleTree;
   const hashedAddress = keccak256(address).toString('hex');
 
-  const proof = whitelistMerkleTree.getHexProof(hashedAddress);
+  if (whiteList1LeafNodes.includes(hashedAddress)) {
+    merkleTree = whitelist1MerkleTree;
+  } else if (whiteList2LeafNodes.includes(hashedAddress)) {
+    merkleTree = whitelist2MerkleTree;
+  } else if (waitListLeafNodes.includes(hashedAddress)) {
+    merkleTree = waitlistMerkleTree;
+  }
+
+  const proof = merkleTree?.getHexProof(hashedAddress) || [];
 
   // const whiteListRootHash = whitelistMerkleTree.getHexRoot();
   // console.log('ROOT', whiteListRootHash);
