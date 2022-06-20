@@ -20,25 +20,30 @@ const waitlistMerkleTree = new MerkleTree(waitListLeafNodes, keccak256, {
 router.get('/merkle', (req, res) => {
   const { address } = req.query;
   let merkleTree;
+  let type;
   const hashedAddress = keccak256(address).toString('hex');
 
   if (whiteList1LeafNodes.includes(hashedAddress)) {
     merkleTree = whitelist1MerkleTree;
+    type = 'wl1';
   } else if (whiteList2LeafNodes.includes(hashedAddress)) {
     merkleTree = whitelist2MerkleTree;
+    type = 'wl2';
   } else if (waitListLeafNodes.includes(hashedAddress)) {
     merkleTree = waitlistMerkleTree;
+    type = 'w8l';
   }
 
   const proof = merkleTree?.getHexProof(hashedAddress) || [];
 
-  // const whiteListRootHash = whitelistMerkleTree.getHexRoot();
+  // const whiteListRootHash = merkleTree.getHexRoot();
   // console.log('ROOT', whiteListRootHash);
   // console.log('===========', hashedAddress);
 
   // TODO consider using toLowerCase for addresses
   // empty array means address is not in a list
-  res.json({ proof });
+
+  res.json({ proof, type });
 });
 
 router.get('/sign', (req, res) => {});
