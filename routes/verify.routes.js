@@ -23,18 +23,30 @@ router.get('/merkle', (req, res) => {
   let type;
   const hashedAddress = keccak256(address).toString('hex');
 
-  if (whiteList1LeafNodes.includes(hashedAddress)) {
-    merkleTree = whitelist1MerkleTree;
-    type = 'wl1';
-  } else if (whiteList2LeafNodes.includes(hashedAddress)) {
-    merkleTree = whitelist2MerkleTree;
-    type = 'wl2';
-  } else if (waitListLeafNodes.includes(hashedAddress)) {
+  const whitelists = [];
+
+  if (waitListLeafNodes.includes(hashedAddress)) {
     merkleTree = waitlistMerkleTree;
+
+    whitelists[2] = merkleTree?.getHexProof(hashedAddress) || [];
+
     type = 'w8l';
   }
 
-  const proof = merkleTree?.getHexProof(hashedAddress) || [];
+  if (whiteList1LeafNodes.includes(hashedAddress)) {
+    merkleTree = whitelist1MerkleTree;
+
+    whitelists[0] = merkleTree?.getHexProof(hashedAddress) || [];
+
+    type = 'wl1';
+  }
+  if (whiteList2LeafNodes.includes(hashedAddress)) {
+    merkleTree = whitelist2MerkleTree;
+
+    whitelists[1] = merkleTree?.getHexProof(hashedAddress) || [];
+
+    type = 'wl2';
+  }
 
   // const whiteListRootHash = merkleTree.getHexRoot();
   // console.log('ROOT', whiteListRootHash);
@@ -43,7 +55,7 @@ router.get('/merkle', (req, res) => {
   // TODO consider using toLowerCase for addresses
   // empty array means address is not in a list
 
-  res.json({ proof, type });
+  res.json({ whitelists, type });
 });
 
 router.get('/sign', (req, res) => {});
